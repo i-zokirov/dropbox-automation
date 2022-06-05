@@ -4,8 +4,9 @@ import { notFound, errorHandler} from "./middleware/errorHandlers.js";
 import {  DropboxAuth } from "dropbox";
 import SecretManager from "./services/SecretManager.js";
 
-import dotenv from "dotenv"
-dotenv.config()
+// ==== COMMENT BEFORE DEPLOYMENT
+// import dotenv from "dotenv"
+// dotenv.config()
 const app = express();
 app.use(express.json());
 
