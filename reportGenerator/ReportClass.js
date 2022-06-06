@@ -35,16 +35,27 @@ class ReportClass {
                 if(onlyFiles.length){
                     const tabRecords = await this.gsheet.getRows(rootFolder.name)
                     let useHeaders = true
+                    
                     if(tabRecords){
                         if(tabRecords[0].includes("Document name") && tabRecords[0].includes("Created")){
                             useHeaders = false
                         }
+                        const filteredNewFiles = [] 
+                        if(tabRecords.length){
+                            for(let file of onlyFiles){
+                                if(!tabRecords.some(item => item[0] === file.name)){
+                                    filteredNewFiles.push(file)
+                                }
+                                
+                            }
+                        }
+                        if(filteredNewFiles.length){
+                            await this.gsheet.appendRow(this.buildSheetData(filteredNewFiles, useHeaders), rootFolder.name)
+                        }
+                    }else {
+                        await this.gsheet.appendRow(this.buildSheetData(onlyFiles, useHeaders), rootFolder.name) 
                     }
-                    const sheetData = this.buildSheetData(onlyFiles, useHeaders)
-                    await this.gsheet.appendRow(sheetData, rootFolder.name)
                 }
-
-                
             }
             return moreFolders.length ? moreFolders : []
         }catch(e){
@@ -69,13 +80,30 @@ class ReportClass {
             const onlyFiles = entries.filter(item => item[".tag"] !== "folder").sort((a, b) => a.client_modified - b.client_modified)
             const folders = entries.filter(item => item[".tag"] === "folder")
 
+          
             if(onlyFiles.length){
-                const sheetData = this.buildSheetData(onlyFiles)
-                await this.gsheet.clear(rootFolder.name)
-                await this.gsheet.appendRow(sheetData, rootFolder.name)
-            } else {
-                await this.gsheet.clear(rootFolder.name)
-            }
+                // const newsheetData = this.buildSheetData(onlyFiles)
+                const existingSheetData = await this.gsheet.getSheetDataAsObject(rootFolder.name) 
+             
+                if(existingSheetData){
+                    if(existingSheetData.length){
+                        const filteredNewFiles = []
+                        for(let file of onlyFiles){
+                        
+                            if(!existingSheetData.some(item => item["Document name"] === file.name)){
+                                filteredNewFiles.push(file)
+                            }
+                        
+                        }
+                        if(filteredNewFiles.length){
+                            await this.gsheet.appendRow(this.buildSheetData(filteredNewFiles, false), rootFolder.name)
+                        }
+                    } else {
+                        await this.gsheet.appendRow(this.buildSheetData(onlyFiles, true), rootFolder.name)
+                    }
+                }
+                
+            } 
 
             if(folders.length){
                 const moreFolders = await this.processMoreFolders(folders, rootFolder)
@@ -99,6 +127,9 @@ class ReportClass {
         }
     }
 }
+
+
+
 
 
 

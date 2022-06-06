@@ -1,6 +1,9 @@
 const { Dropbox } = require("dropbox") ;
 const SecretManager = require("./SecretManager")
+require("dotenv").config()
 
+const clientId = process.env.dbx_key
+const clientSecret = process.env.dbx_secret
 class DropboxClient {
     constructor(){
         this.secretManager = new SecretManager()
@@ -10,8 +13,7 @@ class DropboxClient {
     async initialize(){
         try {
             this.token = JSON.parse(await this.secretManager.getToken())
-    
-            this.dbx = new Dropbox({accessToken: this.token.result.access_token, refreshToken: this.token.result.refresh_token}); 
+            this.dbx = new Dropbox({accessToken: this.token.result.access_token, refreshToken: this.token.result.refresh_token, clientId, clientSecret }); 
         } catch (error) {
             throw error
         }
@@ -28,16 +30,6 @@ class DropboxClient {
     }
 }
 
-
-//  const listFiles = async(path) => {
-//     try {
-        
-//         const { result } = await dbx.filesListFolder({ path });
-//         return result
-//     } catch (error) {
-//         throw error
-//     }
-// }
 
 module.exports = DropboxClient
 
