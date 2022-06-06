@@ -1,7 +1,9 @@
 const DropboxClient = require( "./services/DropboxClient.js");
 const GoogleSheet = require( "./services/GoogleSheet.js");
-const moment = require("moment")
-moment.locale("uz")
+const moment = require("moment-timezone")
+const mm = require("moment")
+
+mm.locale("uz")
 
 class ReportClass {
     constructor(){
@@ -15,10 +17,17 @@ class ReportClass {
         await this.dbx.initialize()
     }
 
+    convertToTimezone(time, zone){
+        const format = 'YYYY/MM/DD HH:mm:ss ZZ'
+        return moment(time, format).tz(zone).format(format)
+    }
+
+    
     buildSheetData(files, useHeaders = true){
         const rows = []
         for(let file of files){
-            rows.push([file.name, `${moment(file.client_modified).format('L')} ${moment(file.client_modified).format('LT')}`])
+            const uztime = this.convertToTimezone(file.client_modified, "Asia/Tashkent")
+            rows.push([file.name, `${mm(uztime.split(" ")[0].split("/").join("-")).format("L")} ${uztime.split(" ")[1].split(":")[0]}:${uztime.split(" ")[1].split(":")[1]}`])
         }
         return useHeaders ? [['Document name', "Created"], ...rows] : rows
     }
@@ -37,9 +46,12 @@ class ReportClass {
                     let useHeaders = true
                     
                     if(tabRecords){
-                        if(tabRecords[0].includes("Document name") && tabRecords[0].includes("Created")){
-                            useHeaders = false
+                        if(tabRecords.length){
+                            if(tabRecords[0].includes("Document name") && tabRecords[0].includes("Created")){
+                                useHeaders = false
+                            }
                         }
+                        
                         const filteredNewFiles = [] 
                         if(tabRecords.length){
                             for(let file of onlyFiles){
@@ -67,7 +79,15 @@ class ReportClass {
         try {
         
         const { entries } = await this.dbx.listFiles("");
-        const rootFolders = entries.filter(item => item[".tag"] === "folder")
+        const onlyFolders = entries.filter(item => item[".tag"] === "folder")
+        const rootFolders = []
+        const exclude = ["ЭСКИ","Маркировки", "Шартномалар" ]
+        for(let folder of onlyFolders){
+            if(!exclude.includes(folder.name)){
+                rootFolders.push(folder)
+
+            }
+        }
         const sheets = await this.gsheet.getSheets()
     
         for (let rootFolder of rootFolders){

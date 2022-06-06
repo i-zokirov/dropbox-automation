@@ -13,6 +13,7 @@
     "dotenv": "^16.0.1",
     "dropbox": "^10.30.0",
     "googleapis": "^100.0.0",
-    "moment": "^2.29.3"
+    "moment": "^2.29.3",
+    "moment-timezone": "^0.5.34"
   }
 }

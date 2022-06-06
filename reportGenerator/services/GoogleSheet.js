@@ -146,7 +146,11 @@ class GoogleSheet {
     async getSheetDataAsObject(range, spreadsheetId = this.spreadSheetId) {
         try {
             const rows = await this.getRows(range, spreadsheetId);
-            return this.convertRowsToObject(rows);
+            if(rows){
+                return this.convertRowsToObject(rows);
+            }else {
+                return []
+            }
         } catch (error) {
             console.log(`Error on getObjectData`, error);
             return error;
