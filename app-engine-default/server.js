@@ -14,9 +14,6 @@ app.use(express.json());
 const dbxAuth = new DropboxAuth({clientId: process.env.dbx_key, clientSecret: process.env.dbx_secret})
 
 // ROUTE HANDLERS
-app.get("/", (req, res) => {
-    res.send("hi")
-})
 
 app.get("/", (req, res) => {
     res.send("Application is running")

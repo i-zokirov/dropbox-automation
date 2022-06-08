@@ -13,8 +13,7 @@ class DropboxClient {
     async initialize(){
         try {
             this.token = JSON.parse(await this.secretManager.getToken())
-            // this.dbx = new Dropbox({accessToken: this.token.result.access_token, refreshToken: this.token.result.refresh_token, clientId, clientSecret }); 
-            this.dbx = new Dropbox({accessToken: "sl.BJDM_U3hTZPGzvKinD1O-1PS1tIxSiFrbhSFdj0USs9eGXo1Fw1epBdVuKHVv_vkghdgjyb0b389uojB2Tu8_DIRghIU-zC5GBijoH1gzgqjPuw53OpjdJQrV-hK7OhpRHpd4N9y" }); 
+            this.dbx = new Dropbox({accessToken: this.token.result.access_token, refreshToken: this.token.result.refresh_token, clientId, clientSecret }); 
         } catch (error) {
             throw error
         }

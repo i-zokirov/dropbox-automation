@@ -8,7 +8,7 @@ mm.locale("uz")
 class ReportClass {
     constructor(){
         this.gsheet = new GoogleSheet(
-            "1bvhO2hoB2tDUyonaz7BD4Klx23SJ0-li4Hv7W9IMvO4"
+            process.env.reportsheetId
         );
         this.dbx = new DropboxClient()
     }
