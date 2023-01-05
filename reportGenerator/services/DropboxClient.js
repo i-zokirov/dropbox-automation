@@ -1,35 +1,37 @@
-const { Dropbox } = require("dropbox") ;
-const SecretManager = require("./SecretManager")
-// require("dotenv").config()
+const { Dropbox } = require("dropbox");
+const SecretManager = require("./SecretManager");
+require("dotenv").config();
 
-const clientId = process.env.dbx_key 
-const clientSecret = process.env.dbx_secret 
+const clientId = process.env.dbx_key;
+const clientSecret = process.env.dbx_secret;
 class DropboxClient {
-    constructor(){
-        this.secretManager = new SecretManager()
-        this.token 
-        this.dbx 
+    constructor() {
+        this.secretManager = new SecretManager();
+        this.token;
+        this.dbx;
     }
-    async initialize(){
+    async initialize() {
         try {
-            this.token = JSON.parse(await this.secretManager.getToken())
-            this.dbx = new Dropbox({accessToken: this.token.result.access_token, refreshToken: this.token.result.refresh_token, clientId, clientSecret }); 
+            this.token = JSON.parse(await this.secretManager.getToken());
+            this.dbx = new Dropbox({
+                accessToken: this.token.result.access_token,
+                refreshToken: this.token.result.refresh_token,
+                clientId,
+                clientSecret,
+            });
         } catch (error) {
-            throw error
+            throw error;
         }
     }
 
-    async listFiles(path){
+    async listFiles(path) {
         try {
-        
             const { result } = await this.dbx.filesListFolder({ path });
-            return result
+            return result;
         } catch (error) {
-            throw error
+            throw error;
         }
     }
 }
 
-
-module.exports = DropboxClient
-
+module.exports = DropboxClient;

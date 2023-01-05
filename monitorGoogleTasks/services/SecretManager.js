@@ -1,8 +1,5 @@
-import { SecretManagerServiceClient } from "@google-cloud/secret-manager";
-import fs from "fs";
-const secretManagerKey = JSON.parse(
-    fs.readFileSync("./keys/secret-manager-key.json", "utf-8")
-);
+const { SecretManagerServiceClient } = require("@google-cloud/secret-manager");
+const secretManagerKey = require("../keys/secret-reader-key.json");
 
 class SecretManager {
     constructor() {
@@ -28,7 +25,7 @@ class SecretManager {
             return secret;
         } catch (error) {
             console.log(`ERROR ON CREATING SECRET: `, error);
-            throw new Error(error);
+            throw error;
         }
     }
 
@@ -41,7 +38,7 @@ class SecretManager {
             return response[0];
         } catch (error) {
             console.log(`ERROR ON GETTING SECRETS: `, error);
-            throw new Error(error);
+            throw error;
         }
     }
 
@@ -57,8 +54,8 @@ class SecretManager {
             return version;
         } catch (error) {
             console.log(`ERROR ON CREATING VERSION: `);
-            console.log(error);
-            throw new Error(error);
+
+            throw error;
         }
     }
 
@@ -70,8 +67,8 @@ class SecretManager {
             return version;
         } catch (error) {
             console.log(`ERROR ON GETTING VERSION: `);
-            console.log(error);
-            throw new Error(error);
+
+            throw error;
         }
     }
 
@@ -83,8 +80,8 @@ class SecretManager {
             return data.payload.data.toString();
         } catch (error) {
             console.log(`ERROR ON ACCESSING VERSION: `);
-            console.log(error);
-            throw new Error(error);
+
+            throw error;
         }
     }
 
@@ -92,14 +89,14 @@ class SecretManager {
         try {
         } catch (error) {
             console.log(`ERROR ON DESTROYING VERSION: `);
-            console.log(error);
-            throw new Error(error);
+
+            throw error;
         }
     }
 
-    async getToken(secretToken) {
+    async getToken(tokenName) {
         try {
-            const [secret] = await this.getSecrets(`name:${secretToken}`);
+            const [secret] = await this.getSecrets(`name:${tokenName}`);
             if (secret) {
                 const versions = await this.getSecretVersions(secret.name);
                 if (versions.length) {
@@ -118,14 +115,13 @@ class SecretManager {
             }
         } catch (error) {
             console.log(`ERROR ON READING TOKEN: `);
-            console.log(error);
-            throw new Error(error);
+            throw error;
         }
     }
 
-    async writeToken(data, secretToken) {
+    async writeToken(data, tokenName) {
         try {
-            const [secret] = await this.getSecrets(`name:${secretToken}`);
+            const [secret] = await this.getSecrets(`name:${tokenName}`);
             if (secret) {
                 const versions = await this.getSecretVersions(secret.name);
                 if (versions.length) {
@@ -144,7 +140,7 @@ class SecretManager {
                 );
                 return newVersion;
             } else {
-                const secret = await this.createSecret(secretToken);
+                const secret = await this.createSecret(tokenName);
                 const newVersion = await this.addSecretVersion(
                     secret.name,
                     data
@@ -153,10 +149,10 @@ class SecretManager {
             }
         } catch (error) {
             console.log(`ERROR ON WRITING TOKEN: `);
-            console.log(error);
-            throw new Error(error);
+
+            throw error;
         }
     }
 }
 
-export default SecretManager;
+module.exports = SecretManager;

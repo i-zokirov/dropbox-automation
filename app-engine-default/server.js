@@ -1,48 +1,78 @@
 import express from "express";
 import expressAsyncHandler from "express-async-handler";
-import { notFound, errorHandler} from "./middleware/errorHandlers.js";
-import {  DropboxAuth } from "dropbox";
+import { notFound, errorHandler } from "./middleware/errorHandlers.js";
+import { DropboxAuth } from "dropbox";
 import SecretManager from "./services/SecretManager.js";
-
+import OAuth from "./services/OAuth.js";
 // ==== COMMENT BEFORE DEPLOYMENT
-// import dotenv from "dotenv"
-// dotenv.config()
+// import dotenv from "dotenv";
+// dotenv.config();
 const app = express();
 app.use(express.json());
 
-
-const dbxAuth = new DropboxAuth({clientId: process.env.dbx_key, clientSecret: process.env.dbx_secret})
+const dbxAuth = new DropboxAuth({
+    clientId: process.env.dbx_key,
+    clientSecret: process.env.dbx_secret,
+});
+const oauth = new OAuth();
+const secretManager = new SecretManager();
 
 // ROUTE HANDLERS
 
 app.get("/", (req, res) => {
-    res.send("Application is running")
-})
+    res.send("Application is running");
+});
 
-app.get("/authenticate", expressAsyncHandler( async(req, res) => {
-   
-    try {
-        const authUrl = await dbxAuth.getAuthenticationUrl(process.env.redirectUrl, null, 'code', 'offline',)
-        res.redirect(authUrl)
-    } catch (error) {
-        throw error
-    }
-}))
+app.get(
+    "/authenticate",
+    expressAsyncHandler(async (req, res) => {
+        try {
+            const authUrl = await dbxAuth.getAuthenticationUrl(
+                process.env.redirectUrl,
+                null,
+                "code",
+                "offline"
+            );
+            res.redirect(authUrl);
+        } catch (error) {
+            throw error;
+        }
+    })
+);
 
-app.get("/api/token", expressAsyncHandler( async(req, res) => {
-    try {
+app.get(
+    "/api/token",
+    expressAsyncHandler(async (req, res) => {
+        try {
+            const { code } = req.query;
+            const token = await dbxAuth.getAccessTokenFromCode(
+                process.env.redirectUrl,
+                code
+            );
+
+            await secretManager.writeToken(token, "token");
+            res.send("Token has been successfully saved");
+        } catch (error) {
+            throw error;
+        }
+    })
+);
+
+// GOOGLE AUTHENTICATION
+app.get("/authenticate/google", (req, res) => {
+    const authUrl = oauth.generateUrl();
+    res.redirect(authUrl);
+});
+
+app.get(
+    "/api/google-token",
+    expressAsyncHandler(async (req, res) => {
         const { code } = req.query;
-        const token = await dbxAuth.getAccessTokenFromCode(process.env.redirectUrl, code)
-        const secretManager = new SecretManager()
-
-        await secretManager.writeToken(token)
-        res.send("Token has been successfully saved")
-    } catch (error) {
-        throw error
-    }
-   
-}))
-
+        const token = await oauth.generateToken(code);
+        await secretManager.writeToken(token, "google-task-token");
+        res.send("Token has been successfully saved");
+    })
+);
 
 // ERROR HANDLING MIDDLEWARE
 app.use(notFound);

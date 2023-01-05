@@ -1,0 +1,19 @@
+{
+  "name": "taskgenerator",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "ikboljon zokirov",
+  "license": "ISC",
+  "dependencies": {
+    "@google-cloud/secret-manager": "^4.2.0",
+    "batchelor": "^2.0.2",
+    "googleapis": "^110.0.0"
+  },
+  "devDependencies": {
+    "dotenv": "^16.0.3"
+  }
+}

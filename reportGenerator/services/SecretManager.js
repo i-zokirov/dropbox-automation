@@ -1,6 +1,5 @@
-const {SecretManagerServiceClient } = require("@google-cloud/secret-manager")
-const secretManagerKey = require("../keys/secret-reader-key.json")
-
+const { SecretManagerServiceClient } = require("@google-cloud/secret-manager");
+const secretManagerKey = require("../keys/secret-reader-key.json");
 
 class SecretManager {
     constructor() {
@@ -95,9 +94,9 @@ class SecretManager {
         }
     }
 
-    async getToken() {
+    async getToken(tokenName) {
         try {
-            const [secret] = await this.getSecrets("name:token");
+            const [secret] = await this.getSecrets(`name:${tokenName}`);
             if (secret) {
                 const versions = await this.getSecretVersions(secret.name);
                 if (versions.length) {
@@ -121,9 +120,9 @@ class SecretManager {
         }
     }
 
-    async writeToken(data) {
+    async writeToken(data, tokenName) {
         try {
-            const [secret] = await this.getSecrets("name:token");
+            const [secret] = await this.getSecrets(`name:${tokenName}`);
             if (secret) {
                 const versions = await this.getSecretVersions(secret.name);
                 if (versions.length) {
@@ -142,7 +141,7 @@ class SecretManager {
                 );
                 return newVersion;
             } else {
-                const secret = await this.createSecret("token");
+                const secret = await this.createSecret(tokenName);
                 const newVersion = await this.addSecretVersion(
                     secret.name,
                     data
@@ -157,5 +156,4 @@ class SecretManager {
     }
 }
 
-
-module.exports = SecretManager
+module.exports = SecretManager;

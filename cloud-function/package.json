@@ -9,11 +9,10 @@
   "author": "Ikboljon Zokirov",
   "license": "ISC",
   "dependencies": {
-    "@google-cloud/local-auth": "^2.1.0",
     "@google-cloud/secret-manager": "^3.12.0",
     "dotenv": "^16.0.1",
     "dropbox": "^10.30.0",
-    "googleapis": "^105.0.0",
+    "googleapis": "^100.0.0",
     "moment": "^2.29.3",
     "moment-timezone": "^0.5.34"
   }

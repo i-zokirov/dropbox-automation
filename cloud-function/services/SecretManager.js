@@ -1,8 +1,6 @@
-import { SecretManagerServiceClient } from "@google-cloud/secret-manager";
-import fs from "fs";
-const secretManagerKey = JSON.parse(
-    fs.readFileSync("./keys/secret-manager-key.json", "utf-8")
-);
+const {SecretManagerServiceClient } = require("@google-cloud/secret-manager")
+const secretManagerKey = require("../keys/secret-reader-key.json")
+
 
 class SecretManager {
     constructor() {
@@ -97,9 +95,9 @@ class SecretManager {
         }
     }
 
-    async getToken(secretToken) {
+    async getToken() {
         try {
-            const [secret] = await this.getSecrets(`name:${secretToken}`);
+            const [secret] = await this.getSecrets("name:token");
             if (secret) {
                 const versions = await this.getSecretVersions(secret.name);
                 if (versions.length) {
@@ -123,9 +121,9 @@ class SecretManager {
         }
     }
 
-    async writeToken(data, secretToken) {
+    async writeToken(data) {
         try {
-            const [secret] = await this.getSecrets(`name:${secretToken}`);
+            const [secret] = await this.getSecrets("name:token");
             if (secret) {
                 const versions = await this.getSecretVersions(secret.name);
                 if (versions.length) {
@@ -144,7 +142,7 @@ class SecretManager {
                 );
                 return newVersion;
             } else {
-                const secret = await this.createSecret(secretToken);
+                const secret = await this.createSecret("token");
                 const newVersion = await this.addSecretVersion(
                     secret.name,
                     data
@@ -159,4 +157,5 @@ class SecretManager {
     }
 }
 
-export default SecretManager;
+
+module.exports = SecretManager
