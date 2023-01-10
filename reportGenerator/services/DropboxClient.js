@@ -1,9 +1,6 @@
 const { Dropbox } = require("dropbox");
 const SecretManager = require("./SecretManager");
-require("dotenv").config();
-
-const clientId = process.env.dbx_key;
-const clientSecret = process.env.dbx_secret;
+const { clientId, clientSecret } = require("../config");
 class DropboxClient {
     constructor() {
         this.secretManager = new SecretManager();
@@ -12,10 +9,13 @@ class DropboxClient {
     }
     async initialize() {
         try {
-            this.token = JSON.parse(await this.secretManager.getToken());
+            this.token = JSON.parse(
+                await this.secretManager.getToken("dropbox-token")
+            );
+
             this.dbx = new Dropbox({
-                accessToken: this.token.result.access_token,
-                refreshToken: this.token.result.refresh_token,
+                accessToken: this.token.access_token,
+                refreshToken: this.token.refresh_token,
                 clientId,
                 clientSecret,
             });

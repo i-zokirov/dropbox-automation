@@ -1,6 +1,5 @@
 import { promisify } from "util";
 import { google } from "googleapis";
-import SecretManager from "./SecretManager.js";
 import { readFile } from "fs/promises";
 
 const oathCredentials = JSON.parse(
@@ -15,7 +14,7 @@ class OAuth {
         this.oAuth2Client = new google.auth.OAuth2(
             client_id,
             client_secret,
-            redirect_uris[0]
+            process.env.oauthRedirectUrl
         );
         this.auth;
     }

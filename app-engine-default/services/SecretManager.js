@@ -126,6 +126,7 @@ class SecretManager {
     async writeToken(data, secretToken) {
         try {
             const [secret] = await this.getSecrets(`name:${secretToken}`);
+
             if (secret) {
                 const versions = await this.getSecretVersions(secret.name);
                 if (versions.length) {

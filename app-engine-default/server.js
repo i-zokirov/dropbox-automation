@@ -45,12 +45,12 @@ app.get(
     expressAsyncHandler(async (req, res) => {
         try {
             const { code } = req.query;
-            const token = await dbxAuth.getAccessTokenFromCode(
+            const { result } = await dbxAuth.getAccessTokenFromCode(
                 process.env.redirectUrl,
                 code
             );
 
-            await secretManager.writeToken(token, "token");
+            await secretManager.writeToken(result, "dropbox-token");
             res.send("Token has been successfully saved");
         } catch (error) {
             throw error;

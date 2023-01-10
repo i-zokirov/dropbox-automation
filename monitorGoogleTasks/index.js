@@ -19,25 +19,27 @@ async function processCompletedTasks() {
     }
 
     for (let list of taskLists) {
+        console.log(`Processing ${list.title} - ${list.id}`);
         if (list.title === "SMS Tasks") {
             continue;
         }
         const completedTasks = await taskApi.getCompletedTasks(list.id);
         const smsTasks = await taskApi.getTasks(smsTaskList.id);
-        for (let task of completedTasks) {
-            if (
-                smsTasks.some(
-                    (smsTask) =>
-                        smsTask.title === `${task.title} => ${list.title}`
-                )
-            ) {
-                continue;
-            } else {
-                await taskApi.createTask(smsTaskList.id, {
-                    title: `${task.title} => ${list.title}`,
-                });
+        if (completedTasks.length)
+            for (let task of completedTasks) {
+                if (
+                    smsTasks.some(
+                        (smsTask) =>
+                            smsTask.title === `${task.title} => ${list.title}`
+                    )
+                ) {
+                    continue;
+                } else {
+                    await taskApi.createTask(smsTaskList.id, {
+                        title: `${task.title} => ${list.title}`,
+                    });
+                }
             }
-        }
     }
 }
 
@@ -50,52 +52,75 @@ async function processSmsTasks() {
     let contacts = {};
     if (data.length) {
         for (let contact of data) {
-            contacts[contact.Contact.trim()] = contact;
+            contacts[contact["Ismi"]] = contact;
         }
     }
 
-    await eskiz.authenticate();
-    for (let task of openTasks) {
-        console.log(`PROCESSING ${task.title}`);
-        const contactTitle = task.title.split("=>")[1].trim();
+    if (openTasks.length) {
+        await eskiz.authenticate();
 
-        if (contacts[contactTitle]) {
-            // send SMS to client
-            const response = await eskiz.sendSMS({
-                number: contacts[contactTitle]["Number"],
-                text: `${task.title.split("=>")[0]} tugallandi!`,
-            });
-            const completed = await taskApi.updateTask(
-                task.id,
-                smsTaskList.id,
-                {
-                    ...task,
-                    notes: `SMS Sent from Eskiz. \n SMS ID: ${response.id}`,
-                    status: "completed",
-                }
-            );
-            console.log(`COMPLETED ${completed.title}`);
-        } else {
-            const completed = await taskApi.updateTask(
-                task.id,
-                smsTaskList.id,
-                {
-                    ...task,
-                    notes: `NO CONTACT NUMBER`,
-                }
-            );
-            console.log(`COMPLETED ${completed.title}`);
+        for (let task of openTasks) {
+            console.log(`PROCESSING ${task.title}`);
+            const contactTitle = task.title.split("=>")[1].trim();
+
+            if (contacts[contactTitle]) {
+                // construct text
+                const rawText = await googlesheet.getRows("SMS Text");
+                const textChunks = rawText[1][0].split("$INVOICE");
+                // send SMS to client
+                const response = await eskiz.sendSMS({
+                    number: contacts[contactTitle]["Telefon raqami"],
+                    text: `${textChunks[0]} ${task.title.split("=>")[0]} ${
+                        textChunks[1]
+                    }`,
+                });
+                console.log(`SMS sent for ${task.title.split("=>")[0]}`);
+                const completed = await taskApi.updateTask(
+                    task.id,
+                    smsTaskList.id,
+                    {
+                        ...task,
+                        notes: `SMS Sent from Eskiz. \n SMS ID: ${response.id}`,
+                        status: "completed",
+                    }
+                );
+                console.log(`COMPLETED ${completed.title}`);
+            } else {
+                const completed = await taskApi.updateTask(
+                    task.id,
+                    smsTaskList.id,
+                    {
+                        ...task,
+                        notes: `NO CONTACT NUMBER`,
+                    }
+                );
+                console.log(`COMPLETED ${completed.title}`);
+            }
         }
     }
 }
 
 // MAIN
-(async function () {
+exports.monitorGoogleTasks = async (req, res) => {
     try {
         await taskApi.initialize();
         await processCompletedTasks();
         await processSmsTasks();
+        res.end();
     } catch (error) {
         console.error(error);
+        throw new Error("EXECUTION FAILED");
     }
-})();
+};
+
+// (async function () {
+//     try {
+//         await taskApi.initialize();
+//         await processCompletedTasks();
+//         await processSmsTasks();
+//         // res.end();
+//     } catch (error) {
+//         console.error(error);
+//         return;
+//     }
+// })();

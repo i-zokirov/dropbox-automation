@@ -115,7 +115,42 @@ class ReportClass {
                     rootFolders.push(folder);
                 }
             }
-            const sheets = await this.gsheet.getSheets();
+            let sheets = await this.gsheet.getSheets();
+
+            const sheetsToBeDeleted = [];
+            const excludedSheets = ["Contacts", "SMS Text"];
+            for (let sheet of sheets) {
+                if (!excludedSheets.includes(sheet.properties.title.trim())) {
+                    if (
+                        !rootFolders.some(
+                            (folder) =>
+                                folder.name.trim() ===
+                                sheet.properties.title.trim()
+                        )
+                    ) {
+                        sheetsToBeDeleted.push(sheet);
+                    }
+                }
+            }
+
+            if (sheetsToBeDeleted.length) {
+                sheets = sheets.filter(
+                    (sheet) =>
+                        !sheetsToBeDeleted.some(
+                            (item) =>
+                                item.properties.sheetId ===
+                                sheet.properties.sheetId
+                        )
+                );
+                await this.gsheet.deleteSheets(sheetsToBeDeleted);
+            }
+
+            sheets = sheets.filter(
+                (sheet) => !excludedSheets.includes(sheet.properties.title)
+            );
+            for (let sheet of sheets) {
+                await this.gsheet.clear(sheet.properties.title);
+            }
 
             for (let rootFolder of rootFolders) {
                 console.log(`PROCESSING - ${rootFolder.name}`);
@@ -138,10 +173,7 @@ class ReportClass {
                     (item) => item[".tag"] === "folder"
                 );
 
-                console.log(folders);
-
                 if (onlyFiles.length) {
-                    // const newsheetData = this.buildSheetData(onlyFiles)
                     const existingSheetData =
                         await this.gsheet.getSheetDataAsObject(rootFolder.name);
 

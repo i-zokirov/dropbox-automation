@@ -6,6 +6,9 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 const spreadsheetId = process.env.reportsheetId;
+const excludedSheets = process.env.excluded.includes(",")
+    ? process.env.excluded.split(",")
+    : process.env.excluded;
 const googlesheet = new GoogleSheet(spreadsheetId);
 const taskApi = new Task();
 
@@ -15,6 +18,12 @@ async function generateTasks() {
     const sheets = await googlesheet.getSheets();
     for (let sheet of sheets) {
         const sheetTitle = sheet.properties.title;
+        if (
+            excludedSheets.includes(sheetTitle) ||
+            sheetTitle === excludedSheets
+        )
+            continue;
+        console.log(`Processing ${sheetTitle}`);
         let taskList;
         // check whether tasklist exists for sheet title
         if (!taskListItems.some((list) => list.title === sheetTitle)) {
@@ -46,20 +55,21 @@ async function generateTasks() {
     }
 }
 
-// MAIN FUNCTION
-(async () => {
+exports.generateTasks = async (req, res) => {
     try {
         await generateTasks();
+        res.end();
     } catch (error) {
         console.error(error);
-        // setTimeout(async () => {
-        //     try {
-        //         await generateTasks();
-        //     } catch (error) {
-        //         setTimeout(async () => {
-        //             await generateTasks();
-        //         }, 1000 * 60);
-        //     }
-        // }, 1000 * 60);
+        return;
     }
-})();
+};
+
+// (async function () {
+//     try {
+//         await generateTasks();
+//     } catch (error) {
+//         console.error(error);
+//         return;
+//     }
+// })();

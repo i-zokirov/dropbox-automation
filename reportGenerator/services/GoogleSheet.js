@@ -1,10 +1,8 @@
 const { google } = require("googleapis");
-const gsheetCredentials = require("../keys/gsheet.json")
-
+const gsheetCredentials = require("../keys/gsheet.json");
 
 class GoogleSheet {
     constructor(spreadSheetId) {
-     
         const scope = ["https://www.googleapis.com/auth/spreadsheets"];
         const { client_email, private_key } = gsheetCredentials;
         const jwtClient = new google.auth.JWT(
@@ -48,6 +46,23 @@ class GoogleSheet {
         }
     }
 
+    async deleteSheets(sheets) {
+        const requests = [];
+        for (let sheet of sheets) {
+            requests.push({
+                deleteSheet: {
+                    sheetId: sheet.properties.sheetId,
+                },
+            });
+        }
+        const batchUpdateRequest = { requests };
+        const result = await this.spreadsheets.batchUpdate({
+            spreadsheetId: this.spreadSheetId,
+            resource: batchUpdateRequest,
+        });
+        return result;
+    }
+
     async appendSheet(title, spreadsheetId = this.spreadSheetId) {
         try {
             const requests = [
@@ -72,7 +87,7 @@ class GoogleSheet {
         }
     }
 
-    async appendSheet(title, spreadsheetId = this.spreadSheetId){
+    async appendSheet(title, spreadsheetId = this.spreadSheetId) {
         try {
             const requests = [
                 {
@@ -146,10 +161,10 @@ class GoogleSheet {
     async getSheetDataAsObject(range, spreadsheetId = this.spreadSheetId) {
         try {
             const rows = await this.getRows(range, spreadsheetId);
-            if(rows){
+            if (rows) {
                 return this.convertRowsToObject(rows);
-            }else {
-                return []
+            } else {
+                return [];
             }
         } catch (error) {
             console.log(`Error on getObjectData`, error);
